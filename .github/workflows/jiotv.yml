@@ -29,15 +29,19 @@ jobs:
         cd temp_jiotv
         go build -o jiotv_go
 
-        # Try generating playlist using available commands
-        ./jiotv_go run & 
-        PID=$!
-        sleep 15
-        kill $PID || true
+        # Start the server in background
+        ./jiotv_go run &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 5
 
-        # Find and copy generated playlist and epg files to root
-        find . -maxdepth 2 -name "*.m3u" -exec cp {} ../playlist.m3u \; || true
-        find . -maxdepth 2 -name "*.xml" -exec cp {} ../epg.xml \; || true
+        # Download playlist and epg from the local running server
+        curl -s http://127.0.0.1:5001/playlist.m3u -o ../playlist.m3u || true
+        curl -s http://127.0.0.1:5001/epg.xml -o ../epg.xml || true
+
+        # Kill the server process
+        kill $SERVER_PID || true
         cd ..
         rm -rf temp_jiotv
 
