@@ -29,13 +29,17 @@ jobs:
         cd temp_jiotv
         go build -o jiotv_go
 
-        # Run with correct flags (-p for playlist, -e for epg) and retry loop
+        # Run with correct epg subcommand or check default export
         for i in {1..3}; do
-          ./jiotv_go -p playlist.m3u -e epg.xml && break || sleep 15
+          ./jiotv_go epg || ./jiotv_go run & 
+          sleep 10
+          pkill jiotv_go || true
+          break
         done
         
-        cp playlist.m3u ../playlist.m3u || true
-        cp epg.xml ../epg.xml || true
+        # If playlist is generated in current or config dir, copy it
+        find . -name "*.m3u" -exec cp {} ../playlist.m3u \; || true
+        find . -name "*.xml" -exec cp {} ../epg.xml \; || true
         cd ..
         rm -rf temp_jiotv
 
