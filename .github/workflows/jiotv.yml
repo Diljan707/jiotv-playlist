@@ -33,14 +33,18 @@ jobs:
         ./jiotv_go run &
         SERVER_PID=$!
         
-        # Wait for server to start
-        sleep 5
+        # Wait for server to boot up properly
+        sleep 6
 
-        # Download playlist and epg from the local running server
+        # Download playlist and epg from local server endpoints with fallbacks
         curl -s http://127.0.0.1:5001/playlist.m3u -o ../playlist.m3u || true
+        if [ ! -s ../playlist.m3u ]; then
+          curl -s http://127.0.0.1:5001/ -o ../playlist.m3u || true
+        fi
+
         curl -s http://127.0.0.1:5001/epg.xml -o ../epg.xml || true
 
-        # Kill the server process
+        # Clean up server process
         kill $SERVER_PID || true
         cd ..
         rm -rf temp_jiotv
