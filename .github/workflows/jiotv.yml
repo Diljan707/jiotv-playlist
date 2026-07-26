@@ -23,15 +23,28 @@ jobs:
           cd jiotv_go
           go build
 
-      - name: Create Config File with Custom Headers
+      - name: Install and Run Cloudflare Warp (Bypass IP Block)
+        run: |
+          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+          sudo apt-get update && sudo apt-get install cloudflare-warp -y
+          warp-cli --accept-tos registration new
+          warp-cli --accept-tos mode proxy
+          warp-cli --accept-tos proxy port 40000
+          warp-cli --accept-tos connect
+          sleep 3
+
+      - name: Create Config File
         run: |
           mkdir -p ~/.config/jiotv_go
           cat << 'EOF' > ~/.config/jiotv_go/config.toml
           ${{ secrets.JIO_CONFIG }}
           EOF
 
-      - name: Generate EPG and Playlist
+      - name: Generate EPG and Playlist via Proxy
+        env:
+          HTTP_PROXY: "socks5://127.0.0.1:40000"
+          HTTPS_PROXY: "socks5://127.0.0.1:40000"
         run: |
           cd jiotv_go
-          # Environment variables ya force flags naal run karna
           ./jiotv_go epg generate
