@@ -29,17 +29,15 @@ jobs:
         cd temp_jiotv
         go build -o jiotv_go
 
-        # Run with correct epg subcommand or check default export
-        for i in {1..3}; do
-          ./jiotv_go epg || ./jiotv_go run & 
-          sleep 10
-          pkill jiotv_go || true
-          break
-        done
-        
-        # If playlist is generated in current or config dir, copy it
-        find . -name "*.m3u" -exec cp {} ../playlist.m3u \; || true
-        find . -name "*.xml" -exec cp {} ../epg.xml \; || true
+        # Try generating playlist using available commands
+        ./jiotv_go run & 
+        PID=$!
+        sleep 15
+        kill $PID || true
+
+        # Find and copy generated playlist and epg files to root
+        find . -maxdepth 2 -name "*.m3u" -exec cp {} ../playlist.m3u \; || true
+        find . -maxdepth 2 -name "*.xml" -exec cp {} ../epg.xml \; || true
         cd ..
         rm -rf temp_jiotv
 
@@ -47,6 +45,7 @@ jobs:
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add playlist.m3u epg.xml
-        git commit -m "Auto-update playlist and epg [skip ci]" || exit 0
-        git push
+        git status
+        git add playlist.m3u epg.xml || true
+        git commit -m "Auto-update playlist and epg [skip ci]" || echo "No changes to commit"
+        git push || true
