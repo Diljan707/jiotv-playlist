@@ -1,37 +1,47 @@
 name: Generate JioTV Playlist
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
   workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
 
-      - name: Build JioTV Go
-        run: |
-          git clone https://github.com/jiotv-go/jiotv_go
-          cd jiotv_go
-          go build
+    - name: Build and Run JioTV Go
+      env:
+        JIO_CONFIG: ${{ secrets.JIO_CONFIG }}
+      run: |
+        mkdir -p ~/.jiotv_go
+        echo "$JIO_CONFIG" > ~/.jiotv_go/config.toml
 
-      - name: Create Config File
-        run: |
-          mkdir -p ~/.config/jiotv_go
-          cat << 'EOF' > ~/.config/jiotv_go/config.toml
-          ${{ secrets.JIO_CONFIG }}
-          EOF
+        git clone https://github.com/jiotv-go/jiotv_go temp_jiotv
+        cd temp_jiotv
+        go build -o jiotv_go
 
-      - name: Generate EPG and Playlist
-        run: |
-          cd jiotv_go
-          # JioTV Android App da User-Agent pass karke run karna
-          USER_AGENT="JioTV/7.0.3 (Linux; Android 13)" ./jiotv_go epg generate
+        for i in {1..3}; do
+          ./jiotv_go export --playlist playlist.m3u --epg epg.xml && break || sleep 15
+        done
+        
+        cp playlist.m3u ../playlist.m3u || true
+        cp epg.xml ../epg.xml || true
+        cd ..
+        rm -rf temp_jiotv
+
+    - name: Commit and Push Playlist
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add playlist.m3u epg.xml
+        git commit -m "Auto-update playlist and epg [skip ci]" || exit 0
+        git push
