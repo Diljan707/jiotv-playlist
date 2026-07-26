@@ -1,5 +1,5 @@
 FROM ghcr.io/jiotv-go/jiotv_go:latest
 
-EXPOSE 8080
+EXPOSE 10000
 
-CMD ["./jiotv_go", "run", "--port", "8080", "--host", "0.0.0.0"]
+CMD sh -c "./jiotv_go run --port $PORT --host 0.0.0.0"
