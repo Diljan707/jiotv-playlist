@@ -23,9 +23,15 @@ jobs:
           cd jiotv_go
           go build
 
+      - name: Create Config File with Custom Headers
+        run: |
+          mkdir -p ~/.config/jiotv_go
+          cat << 'EOF' > ~/.config/jiotv_go/config.toml
+          ${{ secrets.JIO_CONFIG }}
+          EOF
+
       - name: Generate EPG and Playlist
-        env:
-          JIO_ACCESS_TOKEN: ${{ secrets.JIO_CONFIG }}
         run: |
           cd jiotv_go
+          # Environment variables ya force flags naal run karna
           ./jiotv_go epg generate
