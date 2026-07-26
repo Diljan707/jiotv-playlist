@@ -1,0 +1,35 @@
+name: Generate JioTV Playlist
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Har 6 ghante baad automatic update hovegi
+  workflow_dispatch: # Manual run karan layi button vi hovega
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build JioTV Go
+        run: |
+          git clone https://github.com/jiotv-go/jiotv_go
+          cd jiotv_go
+          go build
+
+      - name: Create Config File from Secret
+        run: |
+          mkdir -p ~/.config/jiotv_go
+          echo '${{ secrets.JIO_CONFIG }}' > ~/.config/jiotv_go/config.toml
+
+      - name: Run and Generate Playlist
+        run: |
+          cd jiotv_go
+          # EPG ya playlist generate karan di command
+          ./jiotv_go epg -d ./..
