@@ -26,10 +26,11 @@ jobs:
       - name: Create Config File from Secret
         run: |
           mkdir -p ~/.config/jiotv_go
-          echo '${{ secrets.JIO_CONFIG }}' > ~/.config/jiotv_go/config.toml
+          cat << 'EOF' > ~/.config/jiotv_go/config.toml
+          ${{ secrets.JIO_CONFIG }}
+          EOF
 
       - name: Generate EPG and Playlist
         run: |
           cd jiotv_go
-          # EPG generate karan di sahi command
           ./jiotv_go epg generate
