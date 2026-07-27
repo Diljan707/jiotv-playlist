@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:alpine AS builder
 
 RUN apk add --no-cache git
 RUN git clone https://github.com/jiotv-go/jiotv_go /app
