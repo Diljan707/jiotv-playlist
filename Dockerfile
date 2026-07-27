@@ -1,4 +1,7 @@
-FROM ghcr.io/jiotv-go/jiotv_go:v3.17.2
+FROM ghcr.io/jiotv-go/jiotv_go:latest
+
+ENV JIOTV_DRM=true
+ENV TZ=Asia/Kolkata
 
 EXPOSE 10000
 
