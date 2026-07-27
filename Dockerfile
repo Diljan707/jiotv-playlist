@@ -1,4 +1,4 @@
-FROM ghcr.io/jiotv-go/jiotv_go:v3.17.0
+FROM ghcr.io/jiotv-go/jiotv_go:v3.17.2
 
 EXPOSE 10000
 
